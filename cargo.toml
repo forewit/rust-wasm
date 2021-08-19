@@ -1,0 +1,22 @@
+[package]
+name = "rust-wasm"
+version = "0.0.1"
+authors = ["Marc Anderson"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "*"
+
+[dependencies.web-sys]
+version = "*"
+features = [
+  'console',
+  'Document',
+  'Element',
+  'HtmlElement',
+  'Node',
+  'Window',
+]
