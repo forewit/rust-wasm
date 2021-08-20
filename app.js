@@ -15,8 +15,8 @@ import init, * as rust from './pkg/rust_wasm.js';
         // ------- now we can use the functionality in the wasm -------
 
         // setup game-of-life
-        const CELL_SIZE = 5; // px
-        const GRID_COLOR = "#CCCCCC";
+        const CELL_SIZE = 8; // px
+        const GRID_COLOR = "#EEEEEE";
         const DEAD_COLOR = "#FFFFFF";
         const ALIVE_COLOR = "#000000";
 
@@ -31,17 +31,41 @@ import init, * as rust from './pkg/rust_wasm.js';
         const canvas = document.getElementById("game-of-life-canvas");
         canvas.height = (CELL_SIZE + 1) * height + 1;
         canvas.width = (CELL_SIZE + 1) * width + 1;
-
         const ctx = canvas.getContext('2d');
 
-        const renderLoop = () => {
-            universe.tick();
+        canvas.addEventListener("click", event => {
+            const boundingRect = canvas.getBoundingClientRect();
+
+            const scaleX = canvas.width / boundingRect.width;
+            const scaleY = canvas.height / boundingRect.height;
+
+            const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+            const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+
+            const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+            const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+
+            universe.toggle_cell(row, col);
 
             drawGrid();
             drawCells();
+        });
 
-            requestAnimationFrame(renderLoop);
+        const isPaused = () => {
+            return animationId === null;
         };
+
+        let animationId = null;
+        const renderLoop = () => {
+            renderNextTick();
+            animationId = requestAnimationFrame(renderLoop);
+        };
+
+        const renderNextTick = () => {
+            universe.tick();
+            drawGrid();
+            drawCells();
+        }
 
         const drawGrid = () => {
             ctx.beginPath();
@@ -92,10 +116,36 @@ import init, * as rust from './pkg/rust_wasm.js';
             ctx.stroke();
         };
 
-        // start rendering
-        drawGrid();
-        drawCells();
-        requestAnimationFrame(renderLoop);
+        // setup step-forward button
+        const nextTickButton = document.getElementById("next-tick");
+        nextTickButton.addEventListener("click", event => {
+            renderNextTick();
+        });
+
+        // setup play-pause button
+        const playPauseButton = document.getElementById("play-pause");
+
+        const play = () => {
+            playPauseButton.textContent = "⏸";
+            renderLoop();
+        };
+
+        const pause = () => {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+            playPauseButton.textContent = "▶️";
+        };
+
+        playPauseButton.addEventListener("click", event => {
+            if (isPaused()) {
+                play();
+            } else {
+                pause();
+            }
+        });
+
+        // start
+        play()
     }
     run();
 

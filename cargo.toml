@@ -23,3 +23,7 @@ features = [
   'Node',
   'Window',
 ]
+
+# [profile.release]
+# opt-level = 'z'
+# lto = true
